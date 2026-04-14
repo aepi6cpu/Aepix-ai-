@@ -1,0 +1,34 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == "arpitsharmaetw001@gmail.com";
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Users can read/write their own profile, Admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId);
+    }
+
+    // Visits Collection
+    match /visits/{visitId} {
+      // Anyone can log a visit (even unauthenticated users)
+      allow create: if true;
+      // Only admins can read visits
+      allow read: if isAdmin();
+    }
+  }
+}
